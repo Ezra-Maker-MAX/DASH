@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>欲火老虎机 🔥 </title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap');
+        
+        body {
+            margin: 0; padding: 0;
+            background: linear-gradient(135deg, #1a0033, #330033, #660033);
+            color: #ff69b4;
+            font-family: 'Noto Sans SC', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .machine {
+            background: rgba(0,0,0,0.85);
+            border: 8px solid #ff1493;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 0 60px #ff1493, inset 0 0 40px #ff69b4;
+            width: 90%; max-width: 800px;
+            text-align: center;
+        }
+        
+        h1 { font-size: 2.5em; margin:10px 0; text-shadow: 0 0 20px #ff1493; animation: glow 1.5s infinite alternate; }
+        @keyframes glow { from { text-shadow: 0 0 10px #ff1493; } to { text-shadow: 0 0 30px #ff69b4, 0 0 40px #ff1493; } }
+        
+        .reels {
+            display: flex; justify-content: center; gap:15px; margin:30px 0;
+            background:#000; padding:20px; border-radius:15px; border:4px solid #ffd700;
+        }
+        
+        .reel {
+            width:120px; height:160px; background:#111; border:3px solid #ff69b4;
+            border-radius:10px; display:flex; align-items:center; justify-content:center;
+            font-size:4.5em; overflow:hidden; position:relative;
+            box-shadow: inset 0 0 20px rgba(255,20,147,0.6);
+        }
+        
+        .reel.spinning { animation: spin 0.8s linear infinite; }
+        @keyframes spin { 0% { transform: translateY(0); } 100% { transform: translateY(-200%); } }
+        
+        .controls { display:flex; flex-wrap:wrap; justify-content:center; gap:15px; margin:20px 0; }
+        button {
+            background:linear-gradient(#ff1493,#c71585); color:white; border:none;
+            padding:15px 30px; font-size:1.2em; border-radius:50px; cursor:pointer;
+            box-shadow:0 5px 15px rgba(255,20,147,0.5); transition:all 0.3s;
+        }
+        button:hover { transform:scale(1.05); box-shadow:0 8px 25px rgba(255,20,147,0.7); }
+        
+        .bet { display:flex; align-items:center; gap:10px; color:#ffd700; }
+        input { background:#330033; border:2px solid #ff69b4; color:#fff; padding:10px; width:80px; text-align:center; border-radius:10px; }
+        
+        .stats { display:flex; justify-content:space-around; background:rgba(255,20,147,0.1); padding:15px; border-radius:15px; margin:20px 0; color:#ffd700; }
+        .win-message { min-height:140px; font-size:1.4em; padding:20px; background:rgba(0,0,0,0.7); border-radius:15px; margin:20px 0; border:2px solid #ffd700; }
+        .jackpot { animation:jackpotAnim 0.6s infinite alternate; }
+        @keyframes jackpotAnim { from { transform:scale(1); color:#ffd700; } to { transform:scale(1.08); color:#ff1493; } }
+    </style>
+</head>
+<body>
+    <div class="machine">
+        <h1>🔥 欲火老虎机 🔥</h1>
+        <p style="color:#ff69b4;">助兴 · 震动音效全开 · 极致沉浸</p>
+        
+        <div class="stats">
+            <div>余额: <span id="balance">5000</span> 欲币</div>
+            <div>投注: <span id="currentBet">100</span></div>
+            <div>连胜: <span id="streak">0</span></div>
+        </div>
+        
+        <div class="reels" id="reels">
+            <div class="reel" id="reel1">🍒</div>
+            <div class="reel" id="reel2">💋</div>
+            <div class="reel" id="reel3">🍑</div>
+        </div>
+        
+        <div class="controls">
+            <div class="bet">
+                <label>投注:</label>
+                <input type="number" id="betInput" value="100" min="50" step="50">
+                <button onclick="changeBet(-50)">-50</button>
+                <button onclick="changeBet(50)">+50</button>
+            </div>
+            <button onclick="spin()" id="spinBtn" style="padding:18px 60px; font-size:1.4em;">🔥 开始转动 🔥</button>
+            <button onclick="autoSpinToggle()" id="autoBtn">自动连转</button>
+        </div>
+        
+        <div class="win-message" id="winMessage">准备好被刺激了吗？转动它… 💦</div>
+    </div>
+
+    <script>
+        const symbols = ['🍒','💋','🍑','🍆','🔥','💦','❤️','👅','🫦','🌹'];
+        const highValue = ['🍆','🔥','💦','👅'];
+        
+        let balance = 5000, bet = 100, isSpinning = false, autoSpinning = false, streak = 0;
+        let audioContext;
+        
+        const reel1 = document.getElementById('reel1');
+        const reel2 = document.getElementById('reel2');
+        const reel3 = document.getElementById('reel3');
+        const winMessage = document.getElementById('winMessage');
+        const balanceEl = document.getElementById('balance');
+        const betEl = document.getElementById('currentBet');
+        const streakEl = document.getElementById('streak');
+        
+        function initAudio() {
+            if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        function playSound(type) {
+            initAudio();
+            const oscillator = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            oscillator.connect(gain);
+            gain.connect(audioContext.destination);
+            
+            switch(type) {
+                case 'spin':
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.setValueAtTime(80, audioContext.currentTime);
+                    gain.gain.value = 0.15;
+                    oscillator.start();
+                    setTimeout(() => { oscillator.stop(); }, 180);
+                    break;
+                case 'stop':
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+                    gain.gain.value = 0.4;
+                    oscillator.start();
+                    setTimeout(() => oscillator.stop(), 120);
+                    break;
+                case 'win':
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                    oscillator.frequency.linearRampToValueAtTime(1200, audioContext.currentTime + 0.6);
+                    gain.gain.value = 0.5;
+                    oscillator.start();
+                    setTimeout(() => oscillator.stop(), 650);
+                    break;
+                case 'bigwin':
+                    // 高潮式音效
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.setValueAtTime(150, audioContext.currentTime);
+                    oscillator.frequency.linearRampToValueAtTime(1200, audioContext.currentTime + 1.2);
+                    gain.gain.value = 0.6;
+                    oscillator.start();
+                    setTimeout(() => oscillator.stop(), 1300);
+                    break;
+                case 'jackpot':
+                    // 极致高潮音
+                    oscillator.type = 'square';
+                    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                    oscillator.frequency.linearRampToValueAtTime(1800, audioContext.currentTime + 1.8);
+                    gain.gain.value = 0.7;
+                    oscillator.start();
+                    setTimeout(() => oscillator.stop(), 2000);
+                    break;
+            }
+        }
+        
+        function vibrate(ms) {
+            if (navigator.vibrate) {
+                navigator.vibrate(ms);
+            }
+        }
+        
+        function updateUI() {
+            balanceEl.textContent = balance;
+            betEl.textContent = bet;
+            streakEl.textContent = streak;
+        }
+        
+        function getRandomSymbol() { return symbols[Math.floor(Math.random() * symbols.length)]; }
+        
+        function spinReels() {
+            if (balance < bet) {
+                winMessage.innerHTML = `<span style="color:red;">欲币不足！</span>`;
+                return false;
+            }
+            
+            balance -= bet;
+            updateUI();
+            initAudio();
+            
+            // 旋转音效 + 震动
+            playSound('spin');
+            vibrate(80);
+            
+            reel1.classList.add('spinning');
+            reel2.classList.add('spinning');
+            reel3.classList.add('spinning');
+            
+            setTimeout(() => {
+                const r1 = getRandomSymbol(), r2 = getRandomSymbol(), r3 = getRandomSymbol();
+                reel1.textContent = r1; reel2.textContent = r2; reel3.textContent = r3;
+                
+                reel1.classList.remove('spinning');
+                reel2.classList.remove('spinning');
+                reel3.classList.remove('spinning');
+                
+                playSound('stop');
+                vibrate(50);
+                
+                checkWin([r1, r2, r3]);
+            }, 1650);
+            
+            return true;
+        }
+        
+        function checkWin(results) {
+            let multiplier = 1;
+            let message = '';
+            let isJackpot = false;
+            
+            if (results[0] === results[1] && results[1] === results[2]) {
+                if (highValue.includes(results[0])) {
+                    multiplier = 28;
+                    isJackpot = true;
+                    message = `💥💦 极致高潮！${results.join('')} <br>你彻底被干到失控了！`;
+                    playSound('jackpot');
+                    vibrate([200, 100, 300, 100, 400]);
+                } else if (results[0] === '💦') {
+                    multiplier = 20;
+                    message = `全身喷射的高潮！！！`;
+                    playSound('bigwin');
+                    vibrate(600);
+                } else {
+                    multiplier = 14;
+                    message = `${results[0]} 三连！欲望爆炸～`;
+                    playSound('bigwin');
+                    vibrate(350);
+                }
+            } else if (results.filter(s => highValue.includes(s)).length >= 2) {
+                multiplier = 7;
+                message = `欲火焚身 🔥`;
+                playSound('win');
+                vibrate(180);
+            } else if (results[0] === results[1] || results[1] === results[2]) {
+                multiplier = 4;
+                message = `快感来临...`;
+                playSound('win');
+                vibrate(120);
+            } else {
+                multiplier = 0;
+                message = `没中... 下次更猛烈 💋`;
+                streak = 0;
+            }
+            
+            const winnings = bet * multiplier;
+            balance += winnings;
+            
+            if (winnings > 0) streak++; else streak = Math.max(0, streak-1);
+            
+            winMessage.innerHTML = `${message}<br><span style="color:#ffd700;">赢得 ${winnings} 欲币！</span>`;
+            if (isJackpot) winMessage.classList.add('jackpot');
+            
+            setTimeout(() => winMessage.classList.remove('jackpot'), 4000);
+            updateUI();
+        }
+        
+        function spin() {
+            if (isSpinning) return;
+            isSpinning = true;
+            document.getElementById('spinBtn').disabled = true;
+            spinReels();
+            setTimeout(() => {
+                isSpinning = false;
+                document.getElementById('spinBtn').disabled = false;
+            }, 2200);
+        }
+        
+        let autoInterval = null;
+        function autoSpinToggle() {
+            autoSpinning = !autoSpinning;
+            const btn = document.getElementById('autoBtn');
+            if (autoSpinning) {
+                btn.textContent = '停止自动';
+                btn.style.background = '#ff0000';
+                autoInterval = setInterval(() => {
+                    if (!isSpinning && balance >= bet) spin();
+                    else if (balance < bet) stopAuto();
+                }, 2600);
+            } else stopAuto();
+        }
+        
+        function stopAuto() {
+            autoSpinning = false;
+            const btn = document.getElementById('autoBtn');
+            btn.textContent = '自动连转';
+            btn.style.background = '';
+            if (autoInterval) clearInterval(autoInterval);
+        }
+        
+        function changeBet(amount) {
+            bet = Math.max(50, bet + amount);
+            document.getElementById('betInput').value = bet;
+            updateUI();
+        }
+        
+        document.getElementById('betInput').addEventListener('change', e => {
+            bet = Math.max(50, parseInt(e.target.value) || 100);
+            updateUI();
+        });
+        
+        document.addEventListener('keydown', e => { if (e.key === ' ' && !isSpinning) spin(); });
+        
+        // 初始化
+        updateUI();
+        winMessage.innerHTML = `音效 + 震动已开启<br>准备好被彻底征服了吗？🔥`;
+    </script>
+</body>
+</html>
